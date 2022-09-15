@@ -1,8 +1,6 @@
 use std::{
     path::{Path, PathBuf},
     process::exit,
-    thread::sleep,
-    time::Duration,
 };
 
 use rand::{seq::SliceRandom, thread_rng};
@@ -43,17 +41,10 @@ impl Suite {
             }
         };
 
-        let mut first = true;
-
         macro_rules! play {
             ($deck: ident) => {
                 let mut done = false;
                 while !done {
-                    if first {
-                        first = false;
-                    } else {
-                        sleep(Duration::from_secs(1));
-                    }
                     done = true;
                     for &(deck_index, id) in $deck.iter() {
                         let deck = &mut self.decks[deck_index];
