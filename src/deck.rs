@@ -298,27 +298,42 @@ impl Deck {
     }
 
     pub fn inspect(&self) {
-        let old_due = self
-            .status
-            .values()
-            .filter(|status| status.is_due() && !status.is_new())
+        let old = self
+            .cards
+            .keys()
+            .filter(|id| {
+                self.status
+                    .get(&id)
+                    .map(|status| status.is_due() && !status.is_new())
+                    .unwrap_or(false)
+            })
             .count();
-        let new_available = self
-            .status
-            .values()
-            .filter(|status| status.is_new())
+        let new = self
+            .cards
+            .keys()
+            .filter(|id| {
+                self.status
+                    .get(&id)
+                    .map(|status| status.is_new())
+                    .unwrap_or(true)
+            })
             .count();
         println!(
             "{}: {} due, {} new{}, {} total",
             self.path.to_string_lossy(),
-            old_due,
-            new_available,
-            if new_available > 0 {
+            old,
+            new,
+            if new > 0 {
                 format!(
                     " (#{})",
-                    self.status
-                        .values()
-                        .filter_map(|card| card.is_new().then_some(card.id))
+                    self.cards
+                        .keys()
+                        .filter(|id| {
+                            self.status
+                                .get(&id)
+                                .map(|status| status.is_new())
+                                .unwrap_or(true)
+                        })
                         .min()
                         .unwrap()
                 )
