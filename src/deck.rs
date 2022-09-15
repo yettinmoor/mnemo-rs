@@ -24,6 +24,7 @@ pub struct Deck {
     pub header: Option<Card>,
 
     fields: usize,
+    highest_id: usize,
 
     pub played: HashSet<usize>,
     pub wrong: HashSet<usize>,
@@ -99,7 +100,7 @@ impl Deck {
         let ids = cards_vec
             .iter()
             .filter_map(|card| (card.id != 0).then_some(card.id))
-            .collect();
+            .collect::<Vec<_>>();
 
         let mut cards = cards_vec
             .into_iter()
@@ -107,6 +108,12 @@ impl Deck {
             .collect::<HashMap<_, _>>();
 
         let header = cards.remove(&0);
+        let highest_id = ids
+            .iter()
+            .max()
+            .max(status.keys().max())
+            .copied()
+            .unwrap_or(1);
 
         Ok(Deck {
             path: path.to_owned(),
@@ -118,6 +125,7 @@ impl Deck {
             header,
 
             fields,
+            highest_id,
 
             played: HashSet::new(),
             wrong: HashSet::new(),
@@ -186,8 +194,9 @@ impl Deck {
     }
 
     pub fn get_old(&self) -> Vec<usize> {
-        self.ids
-            .iter()
+        let mut old = self
+            .cards
+            .keys()
             .copied()
             .filter(|id| {
                 self.status
@@ -195,20 +204,25 @@ impl Deck {
                     .map(|status| status.is_due() && !status.is_new())
                     .unwrap_or(false)
             })
-            .collect()
+            .collect::<Vec<_>>();
+        old.sort_by_key(|id| self.status[&id].timestamp);
+        old
     }
 
     pub fn get_new(&self) -> Vec<usize> {
-        self.ids
-            .iter()
+        let mut new = self
+            .cards
+            .keys()
             .copied()
             .filter(|id| {
                 self.status
-                    .get(id)
+                    .get(&id)
                     .map(|status| status.is_new())
                     .unwrap_or(true)
             })
-            .collect()
+            .collect::<Vec<_>>();
+        new.sort();
+        new
     }
 
     pub fn backup_deck(&self) {
@@ -242,7 +256,6 @@ impl Deck {
 
     pub fn add_cards(&self, cards: &str) {
         self.backup_deck();
-        let highest_id = *self.ids.iter().max().unwrap_or(&0);
         let mut f = std::fs::File::options()
             .append(true)
             .create(true)
@@ -253,7 +266,7 @@ impl Deck {
                 eprintln!("bad card format at line {}", i + 1);
                 return;
             }
-            f.write_all(format!("{} | {}\n", i + highest_id + 1, card).as_bytes())
+            f.write_all(format!("{} | {}\n", i + self.highest_id + 1, card).as_bytes())
                 .expect("could not write to file.");
         }
     }
@@ -402,5 +415,29 @@ mod test_deck {
         assert_eq!(new.len(), 2);
         assert_eq!(d.cards[&new[0]].answer, "Antananarivo");
         assert_eq!(d.cards[&new[1]].answer, "Mogadishu");
+    }
+
+    #[test]
+    fn test_add() {
+        const DECK_COPY: &str = "tests/test_parse_ok_copy.mnemo";
+        const LOG_COPY: &str = "tests/test_parse_ok_copy.mnemo.log";
+        std::fs::copy(Path::new("tests/test_parse_ok.mnemo"), Path::new(DECK_COPY)).unwrap();
+        std::fs::copy(
+            Path::new("tests/test_parse_ok.mnemo.log"),
+            Path::new(LOG_COPY),
+        )
+        .unwrap();
+
+        let d = Deck::read_from_file(Path::new(DECK_COPY)).unwrap();
+        assert_eq!(d.highest_id, 10);
+
+        d.add_cards("Madrid | Spain | M |\nLisabon | Portugal | L |");
+        let d = Deck::read_from_file(Path::new(DECK_COPY)).unwrap();
+        assert_eq!(d.highest_id, 12);
+        assert_eq!(d.cards[&11].answer, "Madrid");
+        assert_eq!(d.cards[&12].cues[0], "Portugal");
+
+        std::fs::remove_file(Path::new(DECK_COPY)).unwrap();
+        std::fs::remove_file(Path::new(LOG_COPY)).unwrap();
     }
 }
