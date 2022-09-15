@@ -167,7 +167,7 @@ impl Deck {
 
         while !["y", "n"].contains(&ans.as_str()) {
             ans.clear();
-            print!("correct? [y/N] ");
+            print!("correct? [y/n] ");
             std::io::stdout().flush().unwrap();
             std::io::stdin().read_line(&mut ans).unwrap_or(0);
             ans = ans.to_lowercase().trim().to_string();
