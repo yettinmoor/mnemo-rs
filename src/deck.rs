@@ -162,7 +162,7 @@ impl Deck {
             .as_ref()
             .map(|h| h.answer.clone())
             .filter(|s| !s.is_empty())
-            .unwrap_or_else(|| "cue".to_string());
+            .unwrap_or_else(|| "answer".to_string());
         println!("{}: {}", header, self.cards[&id].answer);
 
         while !["y", "n"].contains(&ans.as_str()) {

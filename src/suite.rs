@@ -35,7 +35,7 @@ impl Suite {
                 if !deck.wrong.is_empty() {
                     println!("got wrong:");
                     for id in deck.wrong.iter() {
-                        println!("   {}", deck.cards[&id].answer);
+                        println!("{}: {}", id, deck.cards[&id].answer);
                     }
                 }
             }
