@@ -251,6 +251,7 @@ impl Deck {
                 Local::now().timestamp()
             )),
         ));
+        std::fs::create_dir_all(BACKUP_DIR).expect("could not create backup directory");
         std::fs::copy(path, backup_file).expect("backup failed");
     }
 
