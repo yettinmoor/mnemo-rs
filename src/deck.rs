@@ -113,7 +113,7 @@ impl Deck {
             .max()
             .max(status.keys().max())
             .copied()
-            .unwrap_or(1);
+            .unwrap_or(0);
 
         Ok(Deck {
             path: path.to_owned(),
@@ -262,7 +262,12 @@ impl Deck {
             .create(true)
             .open(&self.path)
             .unwrap_or_else(|_| panic!("could not open {}.", self.path.to_string_lossy()));
-        for (i, card) in cards.lines().enumerate() {
+        for (i, card) in cards
+            .lines()
+            .map(|s| s.trim())
+            .filter(|s| !s.is_empty() && !s.starts_with('#'))
+            .enumerate()
+        {
             if card.bytes().filter(|&c| c == b'|').count() != self.fields - 1 {
                 eprintln!("bad card format at line {}", i + 1);
                 return;
