@@ -6,6 +6,7 @@ use std::{
 use rand::{seq::SliceRandom, thread_rng};
 
 use crate::deck::{Deck, DeckErr};
+use colored::Colorize;
 
 pub struct Suite {
     pub decks: Vec<Deck>,
@@ -27,13 +28,28 @@ impl Suite {
 
         let on_exit = |decks: &[Deck]| {
             for deck in decks.iter() {
+                let played = deck.played.len();
+                let wrong = deck.wrong.len();
+                let right = played - wrong;
+                let percentage = right as f64 / played as f64 * 100.0;
                 println!(
-                    "{}: played {}.",
-                    deck.path.to_string_lossy(),
-                    deck.played.len()
+                    "{}: {} ({}/{}).",
+                    deck.path.to_string_lossy().green(),
+                    {
+                        let txt = format!("{}%", percentage);
+                        if percentage < 80.0 {
+                            txt.red()
+                        } else if percentage > 95.0 {
+                            txt.green()
+                        } else {
+                            txt.yellow()
+                        }
+                    },
+                    right,
+                    played,
                 );
-                if !deck.wrong.is_empty() {
-                    println!("got wrong:");
+                if wrong > 0 {
+                    println!("got {} wrong:", wrong);
                     for id in deck.wrong.iter() {
                         println!("{}: {}", id, deck.cards[&id].answer);
                     }

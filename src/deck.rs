@@ -8,6 +8,7 @@ use std::{
 };
 
 use chrono::{Datelike, Local};
+use colored::Colorize;
 
 use crate::card::{Card, CardParseErr, Status, StatusParseErr};
 
@@ -134,7 +135,7 @@ impl Deck {
 
     // returns false on quit
     pub fn play_card(&mut self, id: usize) -> bool {
-        println!("{}::#{}", self.path.to_string_lossy(), id);
+        println!("{}::#{}", self.path.to_string_lossy().green(), id);
         for (i, cue) in self.cards[&id].cues.iter().enumerate() {
             if !cue.is_empty() {
                 let header = &self
@@ -143,7 +144,7 @@ impl Deck {
                     .map(|h| h.cues[i].clone())
                     .filter(|s| !s.is_empty())
                     .unwrap_or_else(|| "cue".to_string());
-                println!("{}: {}", header, cue);
+                println!("{}: {}", header.blue(), cue);
             }
         }
 
@@ -163,7 +164,7 @@ impl Deck {
             .map(|h| h.answer.clone())
             .filter(|s| !s.is_empty())
             .unwrap_or_else(|| "answer".to_string());
-        println!("{}: {}", header, self.cards[&id].answer);
+        println!("{}: {}", header.blue(), self.cards[&id].answer);
 
         while !["y", "n"].contains(&ans.as_str()) {
             ans.clear();
@@ -178,8 +179,16 @@ impl Deck {
         let status = self.status.entry(id).or_insert_with(|| Status::new(id));
         let ticks = status.update(correct, true);
 
+        print!(
+            "{}. ",
+            if correct {
+                "ok".green()
+            } else {
+                "failed".red()
+            }
+        );
         if ticks == 0 {
-            println!("done. due in {} days.", self.status[&id].days_left());
+            println!("due in {} days.", self.status[&id].days_left());
             self.played.insert(id);
             if !correct {
                 self.wrong.insert(id);
