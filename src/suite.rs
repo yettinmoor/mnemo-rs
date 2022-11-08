@@ -36,7 +36,7 @@ impl Suite {
                     "{}: {} ({}/{}).",
                     deck.path.to_string_lossy().green(),
                     {
-                        let txt = format!("{}%", percentage);
+                        let txt = format!("{:.1}%", percentage);
                         if percentage < 80.0 {
                             txt.red()
                         } else if percentage > 95.0 {
