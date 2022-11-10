@@ -152,7 +152,10 @@ impl Deck {
 
         print!("reveal... ");
         std::io::stdout().flush().unwrap();
-        std::io::stdin().read_line(&mut ans).unwrap();
+        match std::io::stdin().read_line(&mut ans) {
+            Ok(_) => {}
+            Err(_) => ans.clear(),
+        }
         if ans.trim() == "q" {
             return false;
         }
@@ -170,8 +173,10 @@ impl Deck {
             ans.clear();
             print!("correct? [y/n] ");
             std::io::stdout().flush().unwrap();
-            std::io::stdin().read_line(&mut ans).unwrap_or(0);
-            ans = ans.to_lowercase().trim().to_string();
+            match std::io::stdin().read_line(&mut ans) {
+                Ok(_) => ans = ans.to_lowercase().trim().to_string(),
+                Err(_) => ans.clear(),
+            }
         }
 
         let correct = ans == "y";
