@@ -22,15 +22,6 @@ pub struct Status {
     pub ticks: usize,
 }
 
-impl Card {
-    #[allow(dead_code)]
-    fn to_string(&self) -> String {
-        let mut v = vec![self.id.to_string(), self.answer.clone()];
-        v.extend(self.cues.iter().cloned());
-        v.join(" | ")
-    }
-}
-
 impl Status {
     pub fn new(id: usize) -> Status {
         Status {

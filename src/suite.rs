@@ -51,7 +51,7 @@ impl Suite {
                 if wrong > 0 {
                     println!("got {} wrong:", wrong);
                     for id in deck.wrong.iter() {
-                        println!("{}: {}", id, deck.cards[&id].answer);
+                        println!("{}: {}", id, deck.cards[id].answer);
                     }
                 }
             }
@@ -81,7 +81,7 @@ impl Suite {
             };
         }
 
-        let old = self.get_old(max_old, randomize);
+        let old = self.get_due(max_old, randomize);
         play!(old);
 
         let new = self.get_new(Some(max_new), randomize);
@@ -90,7 +90,7 @@ impl Suite {
         on_exit(&self.decks);
     }
 
-    fn get_old_or_new<F>(
+    fn get_due_or_new<F>(
         &mut self,
         get_fn: F,
         max: Option<usize>,
@@ -135,12 +135,12 @@ impl Suite {
         ret
     }
 
-    pub fn get_old(&mut self, max: Option<usize>, randomize: bool) -> Vec<(usize, usize)> {
-        self.get_old_or_new(Deck::get_old, max, randomize)
+    pub fn get_due(&mut self, max: Option<usize>, randomize: bool) -> Vec<(usize, usize)> {
+        self.get_due_or_new(Deck::get_due, max, randomize)
     }
 
     pub fn get_new(&mut self, max: Option<usize>, randomize: bool) -> Vec<(usize, usize)> {
-        self.get_old_or_new(Deck::get_new, max, randomize)
+        self.get_due_or_new(Deck::get_new, max, randomize)
     }
 }
 

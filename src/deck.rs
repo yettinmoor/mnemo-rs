@@ -14,6 +14,8 @@ use crate::card::{Card, CardParseErr, Status, StatusParseErr};
 
 const BACKUP_DIR: &str = "/tmp/mnemo";
 
+const MAX_DAYS: f64 = 60.0;
+
 #[derive(Debug)]
 pub struct Deck {
     pub path: PathBuf,
@@ -193,7 +195,11 @@ impl Deck {
             }
         );
         if ticks == 0 {
-            println!("due in {} days.", self.status[&id].days_left());
+            if self.status[&id].factor < MAX_DAYS {
+                println!("due in {} days.", self.status[&id].days_left());
+            } else {
+                println!("card is {}!", "done".green());
+            }
             self.played.insert(id);
             if !correct {
                 self.wrong.insert(id);
@@ -207,7 +213,7 @@ impl Deck {
         true
     }
 
-    pub fn get_old(&self) -> Vec<usize> {
+    pub fn get_due(&self) -> Vec<usize> {
         let mut old = self
             .cards
             .keys()
@@ -215,12 +221,28 @@ impl Deck {
             .filter(|id| {
                 self.status
                     .get(id)
-                    .map(|status| status.is_due() && !status.is_new())
+                    .map(|status| status.is_due() && !status.is_new() && status.factor < MAX_DAYS)
                     .unwrap_or(false)
             })
             .collect::<Vec<_>>();
-        old.sort_by_key(|id| self.status[&id].timestamp);
+        old.sort_by_key(|id| self.status[id].timestamp);
         old
+    }
+
+    pub fn get_done(&self) -> Vec<usize> {
+        let mut done = self
+            .cards
+            .keys()
+            .copied()
+            .filter(|id| {
+                self.status
+                    .get(id)
+                    .map(|status| status.factor >= MAX_DAYS)
+                    .unwrap_or(false)
+            })
+            .collect::<Vec<_>>();
+        done.sort_by_key(|id| self.status[id].timestamp);
+        done
     }
 
     pub fn get_new(&self) -> Vec<usize> {
@@ -230,7 +252,7 @@ impl Deck {
             .copied()
             .filter(|id| {
                 self.status
-                    .get(&id)
+                    .get(id)
                     .map(|status| status.is_new())
                     .unwrap_or(true)
             })
@@ -318,30 +340,11 @@ impl Deck {
     }
 
     pub fn inspect(&self) {
-        let old = self
-            .cards
-            .keys()
-            .filter(|id| {
-                self.status
-                    .get(&id)
-                    .map(|status| status.is_due() && !status.is_new())
-                    .unwrap_or(false)
-            })
-            .count();
-        let new = self
-            .cards
-            .keys()
-            .filter(|id| {
-                self.status
-                    .get(&id)
-                    .map(|status| status.is_new())
-                    .unwrap_or(true)
-            })
-            .count();
+        let new = self.get_new().len();
         println!(
-            "{}: {} due, {} new{}, {} total",
+            "{}: {} due, {} new{}, {} done, {} total",
             self.path.to_string_lossy(),
-            old,
+            self.get_due().len(),
             new,
             if new > 0 {
                 format!(
@@ -350,7 +353,7 @@ impl Deck {
                         .keys()
                         .filter(|id| {
                             self.status
-                                .get(&id)
+                                .get(id)
                                 .map(|status| status.is_new())
                                 .unwrap_or(true)
                         })
@@ -360,6 +363,7 @@ impl Deck {
             } else {
                 "".to_string()
             },
+            self.get_done().len(),
             self.cards.len()
         );
     }
@@ -434,9 +438,9 @@ mod test_deck {
     }
 
     #[test]
-    fn test_get_old() {
+    fn test_get_due() {
         let d = Deck::read_from_file(Path::new("tests/test_parse_ok.mnemo")).unwrap();
-        let old = d.get_old();
+        let old = d.get_due();
         assert_eq!(old.len(), 3);
         assert_eq!(d.cards[&old[0]].answer, "Stockholm");
         assert_eq!(d.cards[&old[1]].answer, "Oslo");
