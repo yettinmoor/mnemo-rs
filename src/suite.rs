@@ -21,7 +21,13 @@ impl Suite {
         Ok(Suite { decks })
     }
 
-    pub fn play(&mut self, max_new: usize, max_old: Option<usize>, randomize: bool) {
+    pub fn play(
+        &mut self,
+        max_new: usize,
+        max_old: Option<usize>,
+        randomize: bool,
+        conceal_number: bool,
+    ) {
         for deck in self.decks.iter() {
             deck.backup_log();
         }
@@ -71,7 +77,7 @@ impl Suite {
                             .unwrap_or(true)
                         {
                             done = false;
-                            if !deck.play_card(id) {
+                            if !deck.play_card(id, conceal_number) {
                                 on_exit(&self.decks);
                                 exit(0);
                             }

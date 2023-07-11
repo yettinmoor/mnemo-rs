@@ -16,6 +16,7 @@ struct Args {
     add_cards: Option<PathBuf>,
     inspect: bool,
     dump: bool,
+    conceal_number: bool,
 }
 
 fn main() {
@@ -69,7 +70,12 @@ fn main() {
         };
         suite.decks[0].add_cards(&cards);
     } else {
-        suite.play(args.max_new, args.max_old, args.randomize);
+        suite.play(
+            args.max_new,
+            args.max_old,
+            args.randomize,
+            args.conceal_number,
+        );
     }
 }
 
@@ -82,6 +88,7 @@ fn parse() -> Args {
         add_cards: None,
         inspect: false,
         dump: false,
+        conceal_number: false,
     };
 
     {
@@ -113,6 +120,11 @@ fn parse() -> Args {
             &["-d", "--dump"],
             argparse::StoreTrue,
             "dump .mnemo decks.",
+        );
+        ap.refer(&mut args.conceal_number).add_option(
+            &["-c", "--conceal-number"],
+            argparse::StoreTrue,
+            "conceal card number",
         );
         ap.refer(&mut args.add_cards).add_option(
             &["-a", "--add-cards"],

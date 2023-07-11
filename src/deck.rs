@@ -136,8 +136,16 @@ impl Deck {
     }
 
     // returns false on quit
-    pub fn play_card(&mut self, id: usize) -> bool {
-        println!("{}::#{}", self.path.to_string_lossy().green(), id);
+    pub fn play_card(&mut self, id: usize, conceal_number: bool) -> bool {
+        println!(
+            "{}::#{}",
+            self.path.to_string_lossy().green(),
+            if conceal_number {
+                "?".to_string()
+            } else {
+                id.to_string()
+            }
+        );
         for (i, cue) in self.cards[&id].cues.iter().enumerate() {
             if !cue.is_empty() {
                 let header = &self
