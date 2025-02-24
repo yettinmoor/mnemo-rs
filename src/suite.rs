@@ -27,6 +27,7 @@ impl Suite {
         max_old: Option<usize>,
         randomize: bool,
         conceal_number: bool,
+        play_audio: bool,
     ) {
         for deck in self.decks.iter() {
             deck.backup_log();
@@ -77,7 +78,7 @@ impl Suite {
                             .unwrap_or(true)
                         {
                             done = false;
-                            if !deck.play_card(id, conceal_number) {
+                            if !deck.play_card(id, conceal_number, play_audio) {
                                 on_exit(&self.decks);
                                 exit(0);
                             }

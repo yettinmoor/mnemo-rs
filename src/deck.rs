@@ -3,6 +3,7 @@ use std::{
     fs::File,
     io::Write,
     path::{Path, PathBuf},
+    process,
     process::exit,
     str::FromStr,
 };
@@ -136,7 +137,7 @@ impl Deck {
     }
 
     // returns false on quit
-    pub fn play_card(&mut self, id: usize, conceal_number: bool) -> bool {
+    pub fn play_card(&mut self, id: usize, conceal_number: bool, play_audio: bool) -> bool {
         println!(
             "{}::#{}",
             self.path.to_string_lossy().green(),
@@ -158,6 +159,19 @@ impl Deck {
             }
         }
 
+        let cmd = if play_audio {
+            Option::Some(
+                process::Command::new("trans")
+                    .arg("-speak")
+                    .arg(self.cards[&id].cues.join(" "))
+                    .stdout(process::Stdio::null())
+                    .spawn()
+                    .expect("could not spawn `trans -speak`"),
+            )
+        } else {
+            None
+        };
+
         let mut ans = String::new();
 
         print!("reveal... ");
@@ -170,6 +184,8 @@ impl Deck {
             return false;
         }
         ans.clear();
+
+        cmd.map(|mut cmd| cmd.kill().expect("could not kill `trans -speak`"));
 
         let header = &self
             .header

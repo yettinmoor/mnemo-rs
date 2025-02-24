@@ -13,6 +13,7 @@ struct Args {
     randomize: bool,
     max_new: usize,
     max_old: Option<usize>,
+    play_audio: bool,
     add_cards: Option<PathBuf>,
     inspect: bool,
     dump: bool,
@@ -75,6 +76,7 @@ fn main() {
             args.max_old,
             args.randomize,
             args.conceal_number,
+            args.play_audio,
         );
     }
 }
@@ -86,6 +88,7 @@ fn parse() -> Args {
         max_new: 10,
         max_old: None,
         add_cards: None,
+        play_audio: false,
         inspect: false,
         dump: false,
         conceal_number: false,
@@ -125,6 +128,11 @@ fn parse() -> Args {
             &["-c", "--conceal-number"],
             argparse::StoreTrue,
             "conceal card number",
+        );
+        ap.refer(&mut args.play_audio).add_option(
+            &["-p", "--play"],
+            argparse::StoreTrue,
+            "play card audio using `trans -speak`",
         );
         ap.refer(&mut args.add_cards).add_option(
             &["-a", "--add-cards"],

@@ -162,6 +162,21 @@ impl FromStr for Status {
     }
 }
 
+impl ToString for Card {
+    fn to_string(&self) -> String {
+        if self.cues.is_empty() {
+            format!("{} | {}", self.id.to_string(), self.answer,)
+        } else {
+            format!(
+                "{} | {} | {}",
+                self.id.to_string(),
+                self.answer,
+                self.cues.join(" | ")
+            )
+        }
+    }
+}
+
 #[cfg(test)]
 mod test_card {
     use super::*;
